@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { TelegrafModuleOptions, TelegrafOptionsFactory } from 'nestjs-telegraf';
-import LocalSession from 'telegraf-session-local';
+import * as LocalSession from 'telegraf-session-local';
 
 const sessions = new LocalSession({ database: 'session_db.json' });
 

@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
+import { AppUpdate } from './app.update';
 import { AppService } from './app.service';
 import { TelegrafModule } from 'nestjs-telegraf';
 import { ConfigModule } from '@nestjs/config';
@@ -14,9 +14,10 @@ import { TelegrafConfigService } from './config/telegraf.config.service';
     }),
     TelegrafModule.forRootAsync({
       useClass: TelegrafConfigService,
+      inject: [ConfigModule],
+      imports: [ConfigModule]
     }),
   ],
-  controllers: [AppController],
-  providers: [AppService, TelegrafConfigService],
+  providers: [AppUpdate, AppService, TelegrafConfigService],
 })
 export class AppModule {}
