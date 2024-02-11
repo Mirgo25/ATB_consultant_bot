@@ -11,7 +11,6 @@ export class AppUpdate {
 
   @On('chat_join_request')
   async new_member_in_chat(ctx: Context) {
-    console.log({ message: ctx.chatJoinRequest });
     const link = this.configService.getOrThrow('CHANNEL_LINK');
     const { reply_markup } = getRegionsInlineKeyboard(link);
     await ctx.telegram.sendPhoto(
