@@ -1,31 +1,31 @@
-import { AppService } from './app.service';
-import { Context, Telegraf } from 'telegraf';
-import {
-  InjectBot,
-  Start,
-  TextLink,
-  Update,
-  TextMention,
-  Action,
-  On,
-  Url,
-  Message,
-  Ctx,
-} from 'nestjs-telegraf';
-import axios, { AxiosResponse, RawAxiosRequestHeaders } from 'axios';
-import { NotFoundException } from '@nestjs/common';
+import { Context } from 'telegraf';
+import { underline, bold } from 'telegraf/format';
+import { Update, On } from 'nestjs-telegraf';
+import { getRegionsInlineKeyboard } from './consts/regions';
+import { ConfigService } from '@nestjs/config';
+import { CHOOSE_REGION } from './consts/captions';
 
 @Update()
 export class AppUpdate {
-  constructor(
-    @InjectBot() private readonly bot: Telegraf<Context>,
-    private readonly appService: AppService,
-  ) {}
+  constructor(private readonly configService: ConfigService) {}
 
-  @Start()
-  async getHello(ctx: Context) {
-    await ctx.reply('Hi, Friend!');
+  @On('chat_join_request')
+  async new_member_in_chat(ctx: Context) {
+    console.log({ message: ctx.chatJoinRequest });
+    const link = this.configService.getOrThrow('CHANNEL_LINK');
+    const { reply_markup } = getRegionsInlineKeyboard(link);
+    await ctx.telegram.sendPhoto(
+      ctx.chatJoinRequest.user_chat_id,
+      {
+        source: 'static/photos/ATB_logo.jpg',
+      },
+      {
+        caption: underline(bold(CHOOSE_REGION)),
+        reply_markup,
+      },
+    );
   }
+
   // // https://vm.tiktok.com/ZIJnS8CgJ
   // // https://www.tiktok.com/@mcgregor_millionaire/video/7306885065437482273?_r=1&_t=8icn5CUJdSq
   // @Url(new RegExp('https://vm.tiktok.com/'))
