@@ -1,28 +1,56 @@
-import { Context } from 'telegraf';
+import { Context, Markup } from 'telegraf';
 import { underline, bold } from 'telegraf/format';
 import { Update, On } from 'nestjs-telegraf';
 import { getRegionsInlineKeyboard } from './consts/regions';
 import { ConfigService } from '@nestjs/config';
-import { CHOOSE_REGION } from './consts/captions';
+import {
+  CHOOSE_REGION,
+  CONFIRM,
+  CONFIRM_YOU_ARE_NOT_ROBOT,
+} from './consts/captions';
+import { setTimeout as sleep } from 'timers/promises';
+import { Logger } from '@nestjs/common';
 
 @Update()
 export class AppUpdate {
+  logger = new Logger('TelegramBot');
+
   constructor(private readonly configService: ConfigService) {}
 
   @On('chat_join_request')
   async new_member_in_chat(ctx: Context) {
-    const link = this.configService.getOrThrow('CHANNEL_LINK');
-    const { reply_markup } = getRegionsInlineKeyboard(link);
-    await ctx.telegram.sendPhoto(
-      ctx.chatJoinRequest.user_chat_id,
-      {
-        source: 'static/photos/ATB_logo.jpg',
-      },
-      {
-        caption: underline(bold(CHOOSE_REGION)),
-        reply_markup,
-      },
+    const myRegionChannelLink = this.configService.getOrThrow(
+      'MY_REGION_CHANNEL_LINK',
     );
+    const { reply_markup } = getRegionsInlineKeyboard(myRegionChannelLink);
+    const approveChannelLink = this.configService.getOrThrow(
+      'APPROVE_CHANNEL_LINK',
+    );
+    const { user_chat_id } = ctx.chatJoinRequest;
+    try {
+      await ctx.telegram.sendPhoto(
+        user_chat_id,
+        {
+          source: 'static/photos/ATB_logo.jpg',
+        },
+        {
+          caption: underline(bold(CHOOSE_REGION)),
+          reply_markup,
+        },
+      );
+      await sleep(8000);
+      await ctx.telegram.sendMessage(
+        user_chat_id,
+        bold(CONFIRM_YOU_ARE_NOT_ROBOT),
+        {
+          reply_markup: Markup.inlineKeyboard([
+            Markup.button.url(CONFIRM, approveChannelLink),
+          ]).reply_markup,
+        },
+      );
+    } catch (error) {
+      this.logger.error(error);
+    }
   }
 
   // // https://vm.tiktok.com/ZIJnS8CgJ
