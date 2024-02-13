@@ -15,7 +15,7 @@ import { TelegrafConfigService } from './config/telegraf.config.service';
     TelegrafModule.forRootAsync({
       useClass: TelegrafConfigService,
       inject: [ConfigModule],
-      imports: [ConfigModule]
+      imports: [ConfigModule],
     }),
   ],
   providers: [AppUpdate, AppService, TelegrafConfigService],
