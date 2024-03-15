@@ -38,6 +38,3 @@ lerna-debug.log*
 .env
 .env.*
 !.env.example
-
-# db
-session_db.json

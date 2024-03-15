@@ -1,6 +1,6 @@
 import { Context, Markup } from 'telegraf';
 import { underline, bold } from 'telegraf/format';
-import { Update, On } from 'nestjs-telegraf';
+import { Update, On, Ctx } from 'nestjs-telegraf';
 import { getRegionsInlineKeyboard } from './consts/regions';
 import { ConfigService } from '@nestjs/config';
 import {
@@ -10,15 +10,19 @@ import {
 } from './consts/captions';
 import { setTimeout as sleep } from 'timers/promises';
 import { Logger } from '@nestjs/common';
+import { UsersService } from './users/users.service';
 
 @Update()
 export class AppUpdate {
   logger = new Logger('TelegramBot');
 
-  constructor(private readonly configService: ConfigService) {}
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly usersService: UsersService,
+  ) {}
 
   @On('chat_join_request')
-  async new_member_in_chat(ctx: Context) {
+  async new_member_in_chat(@Ctx() ctx: Context) {
     const myRegionChannelLink = this.configService.getOrThrow(
       'MY_REGION_CHANNEL_LINK',
     );
@@ -27,6 +31,28 @@ export class AppUpdate {
       'APPROVE_CHANNEL_LINK',
     );
     const { user_chat_id } = ctx.chatJoinRequest;
+    const {
+      id: userId,
+      username: userName,
+      first_name: firstName,
+      last_name: lastName,
+    } = ctx.chatJoinRequest.from;
+    const { id: channelChatId } = ctx.chatJoinRequest.chat;
+
+    const isUserExist = await this.usersService.exists(
+      user_chat_id,
+      channelChatId,
+    );
+    if (!isUserExist) {
+      await this.usersService.create({
+        chatId: user_chat_id,
+        firstName,
+        lastName,
+        userName,
+        userId,
+        channelChatId,
+      });
+    }
     try {
       await ctx.telegram.sendPhoto(
         user_chat_id,
