@@ -10,12 +10,16 @@ import {
 } from './consts/captions';
 import { setTimeout as sleep } from 'timers/promises';
 import { Logger } from '@nestjs/common';
+import { UsersService } from './users/users.service';
 
 @Update()
 export class AppUpdate {
   logger = new Logger('TelegramBot');
 
-  constructor(private readonly configService: ConfigService) {}
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly usersService: UsersService,
+  ) {}
 
   @On('chat_join_request')
   async new_member_in_chat(ctx: Context) {
@@ -27,6 +31,28 @@ export class AppUpdate {
       'APPROVE_CHANNEL_LINK',
     );
     const { user_chat_id } = ctx.chatJoinRequest;
+    const {
+      id: userId,
+      username: userName,
+      first_name: firstName,
+      last_name: lastName,
+    } = ctx.chatJoinRequest.from;
+    const { id: channelChatId } = ctx.chatJoinRequest.chat;
+
+    const isUserExist = await this.usersService.exists({
+      chatId: user_chat_id,
+      userId,
+    });
+    if (!isUserExist) {
+      await this.usersService.create({
+        chatId: user_chat_id,
+        firstName,
+        lastName,
+        userName,
+        userId,
+        channelChatId,
+      });
+    }
     try {
       await ctx.telegram.sendPhoto(
         user_chat_id,
