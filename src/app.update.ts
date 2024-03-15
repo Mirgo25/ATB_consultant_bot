@@ -1,6 +1,6 @@
 import { Context, Markup } from 'telegraf';
 import { underline, bold } from 'telegraf/format';
-import { Update, On } from 'nestjs-telegraf';
+import { Update, On, Ctx } from 'nestjs-telegraf';
 import { getRegionsInlineKeyboard } from './consts/regions';
 import { ConfigService } from '@nestjs/config';
 import {
@@ -22,7 +22,7 @@ export class AppUpdate {
   ) {}
 
   @On('chat_join_request')
-  async new_member_in_chat(ctx: Context) {
+  async new_member_in_chat(@Ctx() ctx: Context) {
     const myRegionChannelLink = this.configService.getOrThrow(
       'MY_REGION_CHANNEL_LINK',
     );
