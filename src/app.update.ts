@@ -39,10 +39,10 @@ export class AppUpdate {
     } = ctx.chatJoinRequest.from;
     const { id: channelChatId } = ctx.chatJoinRequest.chat;
 
-    const isUserExist = await this.usersService.exists({
-      chatId: user_chat_id,
-      userId,
-    });
+    const isUserExist = await this.usersService.exists(
+      user_chat_id,
+      channelChatId,
+    );
     if (!isUserExist) {
       await this.usersService.create({
         chatId: user_chat_id,

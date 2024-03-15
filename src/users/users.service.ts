@@ -26,16 +26,8 @@ export class UsersService {
     return this.userModel.findOne({ userId }).exec();
   }
 
-  async exists({
-    chatId,
-    userId,
-  }: {
-    chatId: number;
-    userId: number;
-  }): Promise<boolean> {
-    const res = await this.userModel
-      .findOne({ $or: [{ chatId }, { userId }] })
-      .exec();
+  async exists(chatId: number, channelChatId: number): Promise<boolean> {
+    const res = await this.userModel.findOne({ chatId, channelChatId }).exec();
     return !!res;
   }
 }
