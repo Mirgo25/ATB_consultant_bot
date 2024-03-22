@@ -18,16 +18,32 @@ export class UsersService {
     return this.userModel.find().exec();
   }
 
-  async findByChatId(chatId: number): Promise<User> {
+  async findAllUsers(): Promise<User[]> {
+    return this.userModel.find({ isAdmin: { $ne: true } }).exec();
+  }
+
+  async findAllAdmins(): Promise<User[]> {
+    return this.userModel.find({ isAdmin: true }).exec();
+  }
+
+  async findByChatId(chatId: number) {
     return this.userModel.findOne({ chatId }).exec();
   }
 
-  async findById(userId: number): Promise<User> {
+  async findById(userId: number) {
     return this.userModel.findOne({ userId }).exec();
   }
 
-  async exists(chatId: number, channelChatId: number): Promise<boolean> {
+  async exists(chatId: number, channelChatId: number) {
     const res = await this.userModel.findOne({ chatId, channelChatId }).exec();
     return !!res;
+  }
+
+  async deleteManyById(userId: number) {
+    await this.userModel.deleteMany({ userId });
+  }
+
+  async deleteManyByChatId(chatId: number) {
+    await this.userModel.deleteMany({ chatId });
   }
 }
