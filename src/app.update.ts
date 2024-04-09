@@ -1,12 +1,14 @@
 import { Context, Markup } from 'telegraf';
-import { underline, bold } from 'telegraf/format';
-import { Update, On, Ctx, Command, Message } from 'nestjs-telegraf';
+import { underline, bold, italic } from 'telegraf/format';
+import { Update, On, Ctx, Command, Message, Start } from 'nestjs-telegraf';
 import { getRegionsInlineKeyboard } from './consts/regions';
 import { ConfigService } from '@nestjs/config';
 import {
   CHOOSE_REGION,
   CONFIRM,
   CONFIRM_YOU_ARE_NOT_ROBOT,
+  HAVE_GIFT,
+  CHOOSE_GIFT_FOR_FRIEND,
 } from './consts/captions';
 import { setTimeout as sleep } from 'timers/promises';
 import { Logger } from '@nestjs/common';
@@ -16,6 +18,7 @@ import { AppService } from './app.service';
 import { NO_ACCESS_FOR_COMMAND, NO_SUCH_COMMAND } from './consts/messages';
 import { Api, TelegramClient } from 'telegram';
 import { StringSession } from 'telegram/sessions';
+import { BOT_LINK } from './consts/links';
 
 @Update()
 export class AppUpdate {
@@ -27,54 +30,54 @@ export class AppUpdate {
     private readonly appService: AppService,
   ) {}
 
-  @Command('spam')
-  async spamMailing(@Ctx() ctx: Context, @Message('text') msg: string) {
-    const user = await this.usersService.findByChatId(ctx.chat.id);
-    if (!user?.isAdmin) {
-      await ctx.reply(NO_ACCESS_FOR_COMMAND);
-    }
+  // @Command('spam')
+  // async spamMailing(@Ctx() ctx: Context, @Message('text') msg: string) {
+  //   const user = await this.usersService.findByChatId(ctx.chat.id);
+  //   if (!user?.isAdmin) {
+  //     await ctx.reply(NO_ACCESS_FOR_COMMAND);
+  //   }
 
-    const telegramApiId = Number(
-      this.configService.getOrThrow('TELEGRAM_API_ID'),
-    );
-    const telegramApiHash = this.configService.getOrThrow('TELEGRAM_API_HASH');
-    const session = new StringSession(
-      this.configService.getOrThrow('TELEGRAM_API_SESSION'),
-    );
-    const client = new TelegramClient(
-      session,
-      telegramApiId,
-      telegramApiHash,
-      {},
-    );
-    await client.start({
-      botAuthToken: this.configService.getOrThrow('BOT_TOKEN'),
-    });
+  //   const telegramApiId = Number(
+  //     this.configService.getOrThrow('TELEGRAM_API_ID'),
+  //   );
+  //   const telegramApiHash = this.configService.getOrThrow('TELEGRAM_API_HASH');
+  //   const session = new StringSession(
+  //     this.configService.getOrThrow('TELEGRAM_API_SESSION'),
+  //   );
+  //   const client = new TelegramClient(
+  //     session,
+  //     telegramApiId,
+  //     telegramApiHash,
+  //     {},
+  //   );
+  //   await client.start({
+  //     botAuthToken: this.configService.getOrThrow('BOT_TOKEN'),
+  //   });
 
-    const channel = await client.invoke(
-      new Api.channels.GetFullChannel({
-        channel: this.configService.getOrThrow('CHANNEL_ID_WITH_USERS'),
-      }),
-    );
+  //   const channel = await client.invoke(
+  //     new Api.channels.GetFullChannel({
+  //       channel: this.configService.getOrThrow('CHANNEL_ID_WITH_USERS'),
+  //     }),
+  //   );
 
-    const chatIds = new Set(
-      channel.fullChat.recentRequesters.map((value) => value.toJSNumber()),
-    );
-    const users = await this.usersService.findAllUsers();
-    users.forEach(({ chatId }) => chatIds.add(chatId));
+  //   const chatIds = new Set(
+  //     channel.fullChat.recentRequesters.map((value) => value.toJSNumber()),
+  //   );
+  //   const users = await this.usersService.findAllUsers();
+  //   users.forEach(({ chatId }) => chatIds.add(chatId));
 
-    const spamType = msg.substring(msg.indexOf(' ') + 1);
-    switch (spamType) {
-      case SpamType.GIFT_FRIEND_BOT:
-        await this.appService.sendGiftFriendSpam(ctx, Array.from(chatIds));
-        break;
+  //   const spamType = msg.substring(msg.indexOf(' ') + 1);
+  //   switch (spamType) {
+  //     case SpamType.GIFT_FRIEND_BOT:
+  //       await this.appService.sendGiftFriendSpam(ctx, Array.from(chatIds));
+  //       break;
 
-      default:
-        await ctx.reply(NO_SUCH_COMMAND);
-        break;
-    }
-    return;
-  }
+  //     default:
+  //       await ctx.reply(NO_SUCH_COMMAND);
+  //       break;
+  //   }
+  //   return;
+  // }
 
   @On('chat_join_request')
   async newMemberInChat(@Ctx() ctx: Context) {
@@ -126,6 +129,19 @@ export class AppUpdate {
         {
           reply_markup: Markup.inlineKeyboard([
             Markup.button.url(CONFIRM, approveChannelLink),
+          ]).reply_markup,
+        },
+      );
+      await sleep(8000);
+      await ctx.telegram.sendAnimation(
+        user_chat_id,
+        {
+          source: 'static/animations/roses-bunch-of-flowers.mp4',
+        },
+        {
+          caption: bold(italic(HAVE_GIFT)),
+          reply_markup: Markup.inlineKeyboard([
+            Markup.button.url(CHOOSE_GIFT_FOR_FRIEND, BOT_LINK),
           ]).reply_markup,
         },
       );

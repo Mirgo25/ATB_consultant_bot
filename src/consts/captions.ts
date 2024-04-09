@@ -6,4 +6,4 @@ export const CONFIRM = '✅Підтвердити!';
 // Spam Gift bot
 export const HAVE_GIFT = 'Вам надіслано подарунок!';
 export const SEND_GIFT_RETURN = 'Надіслати у відповідь! 🎁';
-
+export const CHOOSE_GIFT_FOR_FRIEND = '🎁Вибрати подарунок для друга!';
